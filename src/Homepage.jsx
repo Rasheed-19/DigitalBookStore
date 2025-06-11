@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Filter, Star, Heart, ShoppingCart, BookOpen, TrendingUp, Award, Users, ArrowLeft, CreditCard, User, Mail, X } from 'lucide-react';
 import Dashboard from './Dashboard';
 
@@ -302,7 +302,7 @@ const CheckoutForm = ({ onSubmit, cartItems, onBack }) => {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w internetowej-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="John Doe"
               />
               {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
@@ -713,12 +713,16 @@ const CartComponent = ({ cart, onBack, removeFromCart, onShowCheckout }) => {
   );
 };
 
+// BookStorePage Component
 const BookStorePage = ({ cart, wishlist, addToCart, removeFromCart, toggleWishlist, onShowCart, onShowFavorites, onGoBack, onShowBookDetails }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [books, setBooks] = useState([]);
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const searchRef = useRef(null);
 
   const categories = ['All', 'Fiction', 'Non-Fiction', 'Mystery', 'Romance', 'Sci-Fi', 'Biography', 'Self-Help'];
 
@@ -731,6 +735,38 @@ const BookStorePage = ({ cart, wishlist, addToCart, removeFromCart, toggleWishli
     setSearchQuery('');
     setSelectedCategory('All');
     setIsFilterActive(false);
+    setSearchResults([]);
+    setIsSearchActive(false);
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+    const results = mockBooks.filter(book =>
+      searchTerms.every(term =>
+        book.title.toLowerCase().includes(term) ||
+        book.author.toLowerCase().includes(term)
+      ) && (selectedCategory === 'All' || book.category === selectedCategory)
+    );
+    setSearchResults(results);
+    setIsSearchActive(searchQuery.trim() !== '');
+  }, [searchQuery, selectedCategory]);
+
+  useEffect(() => {
+    handleSearch();
+    setIsFilterActive(searchQuery !== '' || selectedCategory !== 'All');
+  }, [searchQuery, selectedCategory, handleSearch]);
+
+  // Handle click outside to close search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchActive(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const filteredBooks = books.filter(book => {
@@ -742,10 +778,6 @@ const BookStorePage = ({ cart, wishlist, addToCart, removeFromCart, toggleWishli
     const matchesCategory = selectedCategory === 'All' || book.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  useEffect(() => {
-    setIsFilterActive(searchQuery !== '' || selectedCategory !== 'All');
-  }, [searchQuery, selectedCategory]);
 
   const BookCard = React.memo(({ book }) => {
     const isInCart = cart.includes(book.id);
@@ -835,58 +867,58 @@ const BookStorePage = ({ cart, wishlist, addToCart, removeFromCart, toggleWishli
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <header className="bg-white shadow-lg sticky top-0 z-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <button
-          onClick={onGoBack}
-          className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation"
-        >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline text-sm font-medium">Back to Dashboard</span>
-          <span className="sm:hidden text-sm font-medium">Back</span>
-        </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={onGoBack}
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline text-sm font-medium">Back to Dashboard</span>
+                <span className="sm:hidden text-sm font-medium">Back</span>
+              </button>
 
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <BookOpen className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h1
+                  className="text-lg sm:text-2xl font-bold text-gray-900 cursor-pointer"
+                  onClick={onGoBack}
+                >
+                  BookStore
+                </h1>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={onShowFavorites}
+                className="relative p-2 sm:p-2 text-gray-600 hover:text-red-600 transition-colors touch-manipulation"
+              >
+                <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={onShowCart}
+                className="relative p-2 sm:p-2 text-gray-600 hover:text-blue-600 transition-colors touch-manipulation"
+              >
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
-          <h1
-            className="text-lg sm:text-2xl font-bold text-gray-900 cursor-pointer"
-            onClick={onGoBack}
-          >
-            BookStore
-          </h1>
         </div>
-      </div>
-
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <button
-          onClick={onShowFavorites}
-          className="relative p-2 sm:p-2 text-gray-600 hover:text-red-600 transition-colors touch-manipulation"
-        >
-          <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-          {wishlist.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-              {wishlist.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={onShowCart}
-          className="relative p-2 sm:p-2 text-gray-600 hover:text-blue-600 transition-colors touch-manipulation"
-        >
-          <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
-          {cart.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-              {cart.length}
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
 
       <section className="py-8 sm:py-12 lg:py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -898,22 +930,60 @@ const BookStorePage = ({ cart, wishlist, addToCart, removeFromCart, toggleWishli
             Explore thousands of books from bestselling authors and discover new favorites
           </p>
 
-          <div className="max-w-2xl mx-auto relative mb-6 sm:mb-8 px-4 sm:px-0">
+          <div className="max-w-2xl mx-auto relative mb-6 sm:mb-8 px-4 sm:px-0" ref={searchRef}>
             <Search className="absolute left-6 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search for books, authors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchActive(true)}
               className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg touch-manipulation"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setIsSearchActive(false);
+                }}
                 className="absolute right-6 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
+            )}
+            {isSearchActive && searchResults.length > 0 && (
+              <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-2 max-h-80 overflow-y-auto">
+                {searchResults.map(book => (
+                  <div
+                    key={book.id}
+                    className="flex items-center p-4 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                    onClick={() => {
+                      onShowBookDetails(book.id);
+                      setIsSearchActive(false);
+                    }}
+                  >
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-12 h-16 object-cover rounded mr-4"
+                    />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{book.title}</h3>
+                      <p className="text-sm text-gray-600">{book.author}</p>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full mt-1 inline-block">
+                        {book.category}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {isSearchActive && searchResults.length === 0 && searchQuery && (
+              <div className="absolute z-10 w-full bg-white rounded-xl shadow-lg mt-2 p-4 text-center">
+                <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600">No results found for "{searchQuery}"</p>
+              </div>
             )}
           </div>
 
@@ -1066,7 +1136,7 @@ const Homepage = ({ onBackToDashboard }) => {
 
   switch (currentView) {
     case 'dashboard':
-      return <DashboardComponent onNavigateToStore={showStore} />;
+      return <Dashboard onNavigateToStore={showStore} />;
     
     case 'cart':
       return (
