@@ -60,6 +60,15 @@ const UserProfile = ({ user, onBack }) => {
     }
   };
 
+  const handleClose = () => {
+    console.log('Close button clicked, triggering onBack to navigate to Dashboard');
+    if (onBack) {
+      onBack();
+    } else {
+      console.error('onBack prop is not defined');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-4xl mx-auto">
@@ -109,7 +118,7 @@ const UserProfile = ({ user, onBack }) => {
                     <span className="hidden sm:inline">Edit</span>
                   </button>
                   <button
-                    onClick={onBack}
+                    onClick={handleClose} // Navigates back to Dashboard component
                     className="flex items-center space-x-1 sm:space-x-2 bg-gray-600 text-white py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-700 transition duration-200"
                   >
                     <X className="w-4 h-4" />

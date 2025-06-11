@@ -5,10 +5,14 @@ import AddNewBook from './AddNewBook';
 import ManageStock from './ManageStock';
 import ViewOrders from './ViewOrders';
 import CustomerList from './CustomerList';
+import UserProfile from './UserProfile';
 
 const Dashboard = ({ user, onBack }) => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [selectedBookId, setSelectedBookId] = useState(null);
 
   // Function to get current part of the day
   const getCurrentPartOfDay = () => {
@@ -22,6 +26,18 @@ const Dashboard = ({ user, onBack }) => {
     } else {
       return 'Good Night';
     }
+  };
+
+  const addToCart = (bookId) => {
+    setCart(prev => prev.includes(bookId) ? prev : [...prev, bookId]);
+  };
+
+  const toggleWishlist = (bookId) => {
+    setWishlist(prev =>
+      prev.includes(bookId)
+        ? prev.filter(id => id !== bookId)
+        : [...prev, bookId]
+    );
   };
 
   const handleHomepageClick = () => {
@@ -44,7 +60,6 @@ const Dashboard = ({ user, onBack }) => {
     setIsMobileMenuOpen(false);
   };
 
-  // Customer List navigation handler
   const handleCustomerListClick = () => {
     setCurrentView('customerList');
     setIsMobileMenuOpen(false);
@@ -54,34 +69,57 @@ const Dashboard = ({ user, onBack }) => {
     setCurrentView('dashboard');
   };
 
-  const handleBackClick = () => {
-    onBack();
+  const handleBackToProfile = () => {
+    setCurrentView('userProfile');
     setIsMobileMenuOpen(false);
   };
 
-  // Render Homepage if selected
+  const handleShowBookDetails = (bookId) => {
+    setCurrentView('bookDetails');
+    setSelectedBookId(bookId);
+  };
+
+  // Render views based on currentView
   if (currentView === 'homepage') {
     return <Homepage onBackToDashboard={handleBackToDashboard} />;
   }
 
-  // Render Add New Book if selected
   if (currentView === 'addNewBook') {
     return <AddNewBook onBack={handleBackToDashboard} />;
   }
 
-  // Render Manage Stock if selected
   if (currentView === 'manageStock') {
-    return <ManageStock onBack={handleBackToDashboard} />;
+    return (
+      <ManageStock
+        onBack={handleBackToDashboard}
+        onShowBookDetails={handleShowBookDetails}
+        cart={cart}
+        wishlist={wishlist}
+        addToCart={addToCart}
+        toggleWishlist={toggleWishlist}
+      />
+    );
   }
 
-  // Render View Orders if selected
   if (currentView === 'viewOrders') {
     return <ViewOrders onBack={handleBackToDashboard} />;
   }
 
-  // Render Customer List if selected
   if (currentView === 'customerList') {
     return <CustomerList onBack={handleBackToDashboard} />;
+  }
+
+  if (currentView === 'bookDetails') {
+    return (
+      <Homepage
+        onBackToDashboard={handleBackToDashboard}
+        initialBookId={selectedBookId}
+      />
+    );
+  }
+
+  if (currentView === 'userProfile') {
+    return <UserProfile onBackToDashboard={handleBackToDashboard} />;
   }
 
   // Render Dashboard (default view)
@@ -116,7 +154,7 @@ const Dashboard = ({ user, onBack }) => {
                 <span>Homepage</span>
               </button>
               <button
-                onClick={handleBackClick}
+                onClick={handleBackToProfile}
                 className="flex items-center space-x-2 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-200"
               >
                 <LogOut className="w-4 h-4" />
@@ -148,7 +186,7 @@ const Dashboard = ({ user, onBack }) => {
                 <span>Homepage</span>
               </button>
               <button
-                onClick={handleBackClick}
+                onClick={handleBackToProfile}
                 className="w-full flex items-center space-x-2 bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200"
               >
                 <LogOut className="w-4 h-4" />
